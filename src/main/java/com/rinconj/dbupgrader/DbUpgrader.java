@@ -71,7 +71,7 @@ public class DbUpgrader {
      *
      * @param version
      */
-    public void syncToVersion(int version, boolean allowDowngrade, boolean emptyDb) {
+    public void syncToVersion(int version, boolean allowDowngrade, boolean emptyDb) throws Exception {
         Connection con = null;
         try {
             con = dataSource.getConnection();
@@ -120,13 +120,52 @@ public class DbUpgrader {
             }
         } catch (Exception e) {
             LOGGER.log(Level.SEVERE, "Failed upgrading DB", e);
-            throw new RuntimeException(e);
+            throw new Exception(e);
         } finally {
             if (con != null) try {
                 con.close();
             } catch (SQLException e) {
             }
         }
+    }
+
+    /**
+     * Retrieves the current version number of the database.
+     * @return
+     */
+    public int getCurrentDbVersion(){
+        Connection con = null;
+        try{
+            con = dataSource.getConnection();
+            if(con.getMetaData().getTables(null, null, versionTable, null).next()){
+                return collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0);
+            }
+            return 0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed retrieving current db version", e);
+        } finally {
+            if(con != null) try {
+                con.close();
+            } catch (SQLException e) {
+            }
+        }
+    }
+
+    /**
+     * Validates the upgrade/rollback scripts for the given version. Useful for unit testing version scripts.
+     * @param version
+     * @throws Exception if upgrade or rollback fails
+     */
+    public void validateVersion(int version) throws Exception {
+        //test upgrade by running current, then downgrading and finally upgrading it back
+        int dbVersion = getCurrentDbVersion();
+        if(dbVersion == version){
+            syncToVersion(version - 1, true, false);
+        } else {
+            syncToVersion(version, true, true);
+        }
+        //restore db version
+        syncToVersion(dbVersion, true, false);
     }
 
     /**
@@ -137,7 +176,7 @@ public class DbUpgrader {
      * @param ignoreIfNotFound
      * @throws IOException
      */
-    public void execScript(Connection conn, String resource, boolean ignoreIfNotFound) throws IOException, SQLException {
+    void execScript(Connection conn, String resource, boolean ignoreIfNotFound) throws IOException, SQLException {
         InputStream is;
         if (scriptDir != null) {
             File file = new File(scriptDir, resource);
@@ -165,6 +204,7 @@ public class DbUpgrader {
 
 
 class JdbcUtils {
+
     public static <T> T collectFirst(ResultSet rs, T defaultValue) throws SQLException {
         if (!rs.next()) return defaultValue;
         return (T) rs.getObject(1);

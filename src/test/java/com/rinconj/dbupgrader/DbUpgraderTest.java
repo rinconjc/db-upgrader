@@ -65,4 +65,12 @@ public class DbUpgraderTest {
             conn.close();
         }
     }
+
+    @Test
+    public void shouldValidateVersion() throws Exception {
+        DataSource dataSource = getDataSource("test4");
+        DbUpgrader upgrader = new DbUpgrader(dataSource, "dev");
+        upgrader.validateVersion(2);
+        upgrader.getCurrentDbVersion();
+    }
 }
