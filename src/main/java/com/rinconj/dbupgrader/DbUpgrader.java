@@ -43,7 +43,7 @@ public class DbUpgrader {
 
     private String environment;
 
-    private String versionTable = "_DBVERSION";
+    private String versionTable = "DB_VERSION";
 
     private String scriptFileFormat = "v%version/%type.sql";
     private String scriptEnvFileFormat = "v%version/%env/%type.sql";
