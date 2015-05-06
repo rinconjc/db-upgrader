@@ -30,7 +30,7 @@ public class DbUpgraderTest {
         Connection conn = dataSource.getConnection();
         dbUpgrader.syncToVersion(2, true, true);
         try{
-            int dbver = collectFirst(conn.createStatement().executeQuery("select version from _DBVERSION where id='default'"), -1);
+            int dbver = collectFirst(conn.createStatement().executeQuery("select version from DB_VERSION where id='default'"), -1);
             assertEquals(2, dbver);
         }finally {
             conn.close();
@@ -44,7 +44,7 @@ public class DbUpgraderTest {
         try {
             DbUpgrader dbUpgrader = new DbUpgrader(dataSource, "dev");
             dbUpgrader.syncToVersion(1,true, false);
-            assertEquals(1, (int) collectFirst(conn.createStatement().executeQuery("select version from _DBVERSION where id = 'default'"), -1));
+            assertEquals(1, (int) collectFirst(conn.createStatement().executeQuery("select version from DB_VERSION where id = 'default'"), -1));
             conn.createStatement().executeQuery("select * from tab3");
         } finally {
             conn.close();
@@ -59,7 +59,7 @@ public class DbUpgraderTest {
             DbUpgrader dbUpgrader = new DbUpgrader(dataSource, "dev");
             dbUpgrader.syncToVersion(2,true, true);//applies current.sql (version 2)
             dbUpgrader.syncToVersion(0,true, true); //downgrades (applies rollback 2)
-            assertEquals(0, (int) collectFirst(conn.createStatement().executeQuery("select version from _DBVERSION where id = 'default'"), -1));
+            assertEquals(0, (int) collectFirst(conn.createStatement().executeQuery("select version from DB_VERSION where id = 'default'"), -1));
             assertFalse(conn.getMetaData().getTables(null, null, "TAB3", null).next());
         } finally {
             conn.close();

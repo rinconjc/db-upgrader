@@ -78,10 +78,10 @@ public class DbUpgrader {
             ResultSet rs = con.getMetaData().getTables(null, null, versionTable, null);
             int dbCurVersion;
             if (rs.next()) {
-                dbCurVersion = collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0);
+                dbCurVersion = ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
             } else {
                 //empty db: setup versioning and current sql
-                con.createStatement().execute(format("CREATE TABLE %s(id varchar(100) NOT NULL, version INT NOT NULL, " +
+                con.createStatement().execute(format("CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, " +
                         "CONSTRAINT unique_dbinfo_id PRIMARY KEY (id))", versionTable));
                 if (emptyDb) {
                     LOGGER.info("Apparently an empty schema...applying current script");
@@ -138,7 +138,7 @@ public class DbUpgrader {
         try{
             con = dataSource.getConnection();
             if(con.getMetaData().getTables(null, null, versionTable, null).next()){
-                return collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0);
+                return ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
             }
             return 0;
         } catch (SQLException e) {
