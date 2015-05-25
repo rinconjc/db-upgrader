@@ -156,13 +156,13 @@ public class DbUpgrader {
      * @param version
      * @throws Exception if upgrade or rollback fails
      */
-    public void validateVersion(int version) throws Exception {
+    public void validateVersion(int version, boolean isEmptyDb) throws Exception {
         //test upgrade by running current, then downgrading and finally upgrading it back
         int dbVersion = getCurrentDbVersion();
         if(dbVersion == version){
             syncToVersion(version - 1, true, false);
         } else {
-            syncToVersion(version, true, true);
+            syncToVersion(version, true, isEmptyDb);
         }
         //restore db version
         syncToVersion(dbVersion, true, false);
