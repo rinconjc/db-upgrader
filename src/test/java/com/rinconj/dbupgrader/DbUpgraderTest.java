@@ -73,4 +73,5 @@ public class DbUpgraderTest {
         upgrader.validateVersion(2, true);
         upgrader.getCurrentDbVersion();
     }
+
 }

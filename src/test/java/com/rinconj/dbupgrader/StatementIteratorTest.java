@@ -12,11 +12,6 @@ import static org.junit.Assert.*;
  */
 public class StatementIteratorTest {
 
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
     @Test
     public void shouldHandleEmptyScript() throws Exception {
         assertFalse(new StatementIterator(new StringReader("")).hasNext());
@@ -52,5 +47,20 @@ public class StatementIteratorTest {
             e.printStackTrace();
             //pass
         }
+    }
+
+    @Test
+    public void shouldParseBlockComments() throws Exception {
+        String blockComment = "/* a block comment \n second line */";
+        assertEquals("select * from table1", new StatementIterator(new StringReader(blockComment + "select * from table1")).next());
+        String sqlWithBlockComment = "select /* some comment or dbms metadata */ * from table1";
+        assertEquals(sqlWithBlockComment, new StatementIterator(new StringReader(sqlWithBlockComment)).next());
+        String sqlWithSlashAndStar = "select col1/2 /* comment * test */ from table1";
+        assertEquals(sqlWithSlashAndStar, new StatementIterator(new StringReader(sqlWithSlashAndStar)).next());
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void shouldFailWithUnterminatedBlockComments() throws Exception {
+        new StatementIterator(new StringReader("select col1, /* starting comment from test")).next();
     }
 }

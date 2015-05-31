@@ -39,6 +39,8 @@ public class StatementIterator implements Iterator<String> {
             parseString(reader, sb);
         } else if (nextChar == '-'){
             return parseComment(reader, nextChar, sb);
+        } else if(nextChar == '/'){
+            return parseBlockComment(reader, nextChar, sb);
         } else if (nextChar == STMT_SEPARATOR){
             return true;
         } else {
@@ -56,6 +58,32 @@ public class StatementIterator implements Iterator<String> {
         //it is a comment, skip rest of the line!
         for(int read = reader.read(); read!=-1 && read!='\n'; read = reader.read());
         sb.append('\n');
+        return false;
+    }
+
+    private boolean parseBlockComment(Reader reader, int curChar,  StringBuilder sb) throws IOException {
+        int nextChar = reader.read();
+        if(nextChar!='*'){
+            sb.append(toChars(curChar));
+            return handleChar(nextChar, reader, sb);
+        }
+        //it is the start of block comment, extract comment
+        StringBuilder comment = new StringBuilder();
+        while (true){
+            int read;
+            for(read = reader.read(); read!=-1 && read!='*'; read = reader.read())
+                comment.append(toChars(read));
+            if(read==-1)
+                throw new RuntimeException("Unterminated block comment, missing */ after: " + comment.toString());
+            comment.append(toChars(read));
+            read = reader.read();
+            if(read==-1)
+                throw new RuntimeException("Unterminated block comment, missing */ after: " + comment.toString());
+            comment.append(toChars(read));
+            if(read=='/') break;
+        }
+        if(sb.length()>0) //include block comment if not at the beginning of sentence.
+            sb.append("/*").append(comment);
         return false;
     }
 
