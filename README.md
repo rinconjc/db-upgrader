@@ -34,11 +34,11 @@ Use the following convention to setup your Dabase scritps. The scripts can conta
 The scripts should be created as resource files available in the classpath of the application, e.g. the *src/main/resources* folder for typical maven projects.
 
 * *src/main/resources/db/latest/current.sql* The latest script to fully initialise a new database, it should be kept always up to date. If no automated initial setup is required it may contain an empty file.
-* *src/main/resources/db/<env>/current.sql* The <env> specific initialisation script. The <env> cand be any string identifier e.g. dev, test, prod
-* *src/main/resources/db/v<version#>/upgrade.sql* The SQL script to upgrade the database to version *version#* (an integer starting on 1)
-* *src/main/resources/db/v<version#>/rollback.sql* The SQL script to reverse or rollback the changes of the *version#*, this is used to validate the upgrade script and if necessary downgrade the database.
-* *src/main/resources/db/v<version#>/<env>/upgrade.sql* (Optional) The upgrade script only applicable to the given environment <env>
-* *src/main/resources/db/v<version#>/<env>/rollback.sql* (Optional) The environment specific reverse script.
+* *src/main/resources/db/[env]/current.sql* The [env] specific initialisation script. The [env] cand be any string identifier e.g. dev, test, prod
+* *src/main/resources/db/v[version#]/upgrade.sql* The SQL script to upgrade the database to version *version#* (an integer starting on 1)
+* *src/main/resources/db/v[version#]/rollback.sql* The SQL script to reverse or rollback the changes of the *version#*, this is used to validate the upgrade script and if necessary downgrade the database.
+* *src/main/resources/db/v[version#]/[env]/upgrade.sql* (Optional) The upgrade script only applicable to the given environment [env]
+* *src/main/resources/db/v[version#]/[env]/rollback.sql* (Optional) The environment specific reverse script.
 
 ## Upgrade Automation
 Use the *DbUpgrader* to perform the database upgrade during the application startup.
