@@ -35,7 +35,9 @@ public class DbUpgrader {
     private final static Logger LOGGER = Logger.getLogger(DbUpgrader.class.getName());
     private final static String SQL_SCRIPTS_DIR_SYS_PROPERTY = "dbupgrader.sql.dir";
 
-    private String sqlResourceBasePath = "/db";
+    private String scriptsBasePath = "/db";
+
+    private char statementSeparator = ';';
 
     private final DataSource dataSource;
 
@@ -182,13 +184,13 @@ public class DbUpgrader {
             File file = new File(scriptDir, resource);
             is = file.isFile() ? new FileInputStream(file) : null;
         } else {
-            is = getClass().getResourceAsStream(sqlResourceBasePath + "/" + resource);
+            is = getClass().getResourceAsStream(scriptsBasePath + "/" + resource);
         }
 
         if (is == null && !ignoreIfNotFound) throw new IOException("SQL Script Resource " + resource + " not found!");
         if (is == null) return;
         LOGGER.info("Executing " + resource);
-        StatementIterator iterator = new StatementIterator(new InputStreamReader(is));
+        StatementIterator iterator = new StatementIterator(new InputStreamReader(is), statementSeparator);
         while (iterator.hasNext()) {
             String stmt = iterator.next();
             try {
@@ -199,6 +201,30 @@ public class DbUpgrader {
                 throw e;
             }
         }
+    }
+
+    public String getScriptsBasePath() {
+        return scriptsBasePath;
+    }
+
+    public void setScriptsBasePath(String scriptsBasePath) {
+        this.scriptsBasePath = scriptsBasePath;
+    }
+
+    public char getStatementSeparator() {
+        return statementSeparator;
+    }
+
+    public void setStatementSeparator(char statementSeparator) {
+        this.statementSeparator = statementSeparator;
+    }
+
+    public String getSchemaId() {
+        return schemaId;
+    }
+
+    public void setSchemaId(String schemaId) {
+        this.schemaId = schemaId;
     }
 }
 

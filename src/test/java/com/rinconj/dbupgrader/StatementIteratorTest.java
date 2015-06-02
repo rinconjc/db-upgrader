@@ -1,6 +1,5 @@
 package com.rinconj.dbupgrader;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.StringReader;
@@ -63,4 +62,12 @@ public class StatementIteratorTest {
     public void shouldFailWithUnterminatedBlockComments() throws Exception {
         new StatementIterator(new StringReader("select col1, /* starting comment from test")).next();
     }
+
+    @Test
+    public void shouldHandleOtherSeparators() throws Exception {
+        StatementIterator iterator = new StatementIterator(new StringReader("declare x=2;\nbegin\npl-sql;\nend/\nselect 1 from dual/\n"), '/');
+        assertEquals("declare x=2;\nbegin\npl-sql;\nend", iterator.next());
+        assertEquals("select 1 from dual", iterator.next());
+    }
+
 }
