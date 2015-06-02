@@ -94,7 +94,12 @@ public class StatementIterator implements Iterator<String> {
     private final Parser END_OF_STATEMENT_PARSER = new AbstractParser("END_OF_STATEMENT_PARSER") {
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
-            return curChar==stmtSeparator || curChar == -1;
+            if(curChar!=stmtSeparator) return false;
+            if(curChar==-1) return true;
+            //expect blank after it
+            for (int c=reader.read(); c!='\n' && c!=-1; c = reader.read())
+                if(!Character.isWhitespace(c)) return false;
+            return true;
         }
     };
 

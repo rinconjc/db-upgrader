@@ -20,7 +20,7 @@ public class StatementIteratorTest {
     @Test
     public void shouldExtractSingleStatement() throws Exception {
         assertEquals("select * from dual", new StatementIterator(new StringReader("select * from dual")).next());
-        assertEquals("select * from dual", new StatementIterator(new StringReader("--comment\n select * from dual;--another comment")).next());
+        assertEquals("select * from dual", new StatementIterator(new StringReader("--comment\n select * from dual;  \n--another comment")).next());
         assertEquals("select * \nfrom dual", new StatementIterator(new StringReader("select * --comment;\nfrom dual")).next());
     }
 
@@ -68,6 +68,7 @@ public class StatementIteratorTest {
         StatementIterator iterator = new StatementIterator(new StringReader("declare x=2;\nbegin\npl-sql;\nend/\nselect 1 from dual/\n"), '/');
         assertEquals("declare x=2;\nbegin\npl-sql;\nend", iterator.next());
         assertEquals("select 1 from dual", iterator.next());
+        assertEquals("select 1/0 from test", new StatementIterator(new StringReader("select 1/0 from test/"), '/').next());
     }
 
 }
