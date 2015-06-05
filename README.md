@@ -20,7 +20,7 @@ Add the following dependency to your pom.xml
 <dependency>
     <groupId>com.github.rinconjc</groupId>
     <artifactId>db-upgrader</artifactId>
-    <version>1.0-beta3</version>
+    <version>1.0-beta5</version>
 </dependency>
 ```
 
@@ -72,7 +72,31 @@ public class DbUpgradeTest{
 }
 
 ```
+## Customisations
 
+The above conventions and defaults can be customised as follows:
+  
+  * Using a different statement separator. *Warning*: Only ; and / has been tested, use other separators at own risk.  
+   
+   ```java
+   dbUpgrader.setStatementSeparator('/');
+   ```
+  
+  * Use a different script directory.  The default directory is */db*, but can be changed to any other by setting the *scriptsBasePath*
+  
+   ```java
+   dbUpgrader.setScriptsBasePath("/my-custom-sql-resource-dir");   
+   ```
+   
+   * Store SQL scripts NOT in the classpath. By default the SQL resources are looked up in the classpath, but it's also possible to store in directories outside of the classpath, by specifying the location via the *dbupgrader.sql.dir* JVM parameter:
+    e.g.
+    
+    ```bash
+    java -Ddbupgrader.sql.dir=/path/to/my/sql/files ...
+    ```
+    
+    
+   
 
 
 
