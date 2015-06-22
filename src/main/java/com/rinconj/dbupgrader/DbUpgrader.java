@@ -82,7 +82,7 @@ public class DbUpgrader {
             ResultSet rs = metaData.getTables(null, null, versionTable, null);
             int dbCurVersion;
             if (rs.next()) {
-                dbCurVersion = collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0).intValue();
+                dbCurVersion = ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
             } else {
                 //empty db: setup versioning and current sql
                 con.createStatement().execute(format("CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, " +
