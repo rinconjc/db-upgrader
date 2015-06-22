@@ -14,23 +14,11 @@ import static java.lang.Character.toChars;
 public class StatementIterator implements Iterator<String> {
     interface Parser{
         boolean parse(Reader reader, StringBuilder sb) throws IOException;
-        String name();
-    }
-
-    abstract class AbstractParser implements Parser{
-        final String name;
-        public AbstractParser(String name){
-            this.name = name;
-        }
-
-        public String name() {
-            return name;
-        }
     }
 
     private final char stmtSeparator;
 
-    private final Parser STRING_PARSER = new AbstractParser("STRING_PARSER") {
+    private final Parser STRING_PARSER = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
             if(curChar!='\'') return false;
@@ -47,7 +35,7 @@ public class StatementIterator implements Iterator<String> {
         }
     };
 
-    private final Parser COMMENT_PARSER = new AbstractParser("COMMENT_PARSER") {
+    private final Parser COMMENT_PARSER = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
             if(curChar!='-') return false;
@@ -62,7 +50,7 @@ public class StatementIterator implements Iterator<String> {
         }
     };
 
-    private final Parser BLOCK_COMMENT_PARSER = new AbstractParser("BLOCK_COMMENT_PARSER") {
+    private final Parser BLOCK_COMMENT_PARSER = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
             if(curChar!='/') return false;
@@ -91,7 +79,7 @@ public class StatementIterator implements Iterator<String> {
         }
     };
 
-    private final Parser END_OF_STATEMENT_PARSER = new AbstractParser("END_OF_STATEMENT_PARSER") {
+    private final Parser END_OF_STATEMENT_PARSER = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
             if(curChar!=stmtSeparator) return false;
@@ -103,7 +91,7 @@ public class StatementIterator implements Iterator<String> {
         }
     };
 
-    private final Parser DEFAULT_PARSER = new AbstractParser("DEFAULT_PARSER") {
+    private final Parser DEFAULT_PARSER = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             int curChar = reader.read();
             if(curChar==-1) return false;
@@ -112,7 +100,7 @@ public class StatementIterator implements Iterator<String> {
         }
     };
 
-    private final Parser END_OF_SCRIPT = new AbstractParser("END_OF_SCRIPT") {
+    private final Parser END_OF_SCRIPT = new Parser(){
         public boolean parse(Reader reader, StringBuilder sb) throws IOException {
             return reader.read()==-1;
         }

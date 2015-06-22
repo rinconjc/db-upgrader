@@ -77,10 +77,12 @@ public class DbUpgrader {
         Connection con = null;
         try {
             con = dataSource.getConnection();
-            ResultSet rs = con.getMetaData().getTables(null, null, versionTable, null);
+            DatabaseMetaData metaData = con.getMetaData();
+            LOGGER.info(format("executing DB version sync on DB:%S@%s", metaData.getURL(), metaData.getUserName()));
+            ResultSet rs = metaData.getTables(null, null, versionTable, null);
             int dbCurVersion;
             if (rs.next()) {
-                dbCurVersion = ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
+                dbCurVersion = collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0).intValue();
             } else {
                 //empty db: setup versioning and current sql
                 con.createStatement().execute(format("CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, " +
@@ -195,7 +197,11 @@ public class DbUpgrader {
             String stmt = iterator.next();
             try {
                 LOGGER.info("executing: " + stmt);
-                conn.createStatement().execute(stmt);
+                Statement statement = conn.createStatement();
+                boolean hasResult = statement.execute(stmt);
+                if(!hasResult){
+                    LOGGER.info(statement.getUpdateCount() + " rows affected");
+                }
             } catch (SQLException e) {
                 LOGGER.log(Level.SEVERE, "Failed executing statement:" + stmt, e);
                 throw e;
