@@ -34,6 +34,9 @@ import static java.lang.String.valueOf;
 public class DbUpgrader {
     private final static Logger LOGGER = Logger.getLogger(DbUpgrader.class.getName());
     private final static String SQL_SCRIPTS_DIR_SYS_PROPERTY = "dbupgrader.sql.dir";
+    private static final String ADD_LAST_SYNC_ALTER_TABLE = "ALTER TABLE ADD LAST_SYNC TIMESTAMP";
+    private static final String CREATE_VERSION_TABLE_SQL = "CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, last_sync TIMESTAMP, " +
+            "CONSTRAINT unique_dbinfo_id PRIMARY KEY (id))";
 
     private String scriptsBasePath = "/db";
 
@@ -78,24 +81,25 @@ public class DbUpgrader {
         try {
             con = dataSource.getConnection();
             DatabaseMetaData metaData = con.getMetaData();
-            LOGGER.info(format("executing DB version sync on DB:%S@%s", metaData.getURL(), metaData.getUserName()));
+            LOGGER.info(format("executing DB version sync on DB: %s@%s", metaData.getUserName(), metaData.getURL()));
             ResultSet rs = metaData.getTables(null, null, versionTable, null);
             int dbCurVersion;
             if (rs.next()) {
                 dbCurVersion = ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
+                Timestamp lastSync = getLastSync(con);
+                LOGGER.info("last sync was on " + lastSync);
             } else {
                 //empty db: setup versioning and current sql
-                con.createStatement().execute(format("CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, " +
-                        "CONSTRAINT unique_dbinfo_id PRIMARY KEY (id))", versionTable));
+                con.createStatement().execute(format(CREATE_VERSION_TABLE_SQL, versionTable));
                 if (emptyDb) {
                     LOGGER.info("Apparently an empty schema...applying current script");
                     //apparently an empty db
                     execScript(con, "latest/current.sql", false);
                     execScript(con, "latest/" + environment + "/current.sql", true);
-                    executeSql(con, format("INSERT INTO %s(id,version) values(?,?)", versionTable), schemaId, version);
+                    executeSql(con, format("INSERT INTO %s(id,version, last_sync) values(?,?,?)", versionTable), schemaId, version, new Timestamp(System.currentTimeMillis()));
                     dbCurVersion = version;
                 } else {
-                    executeSql(con, format("INSERT INTO %s(id,version) values(?,?)", versionTable), schemaId, 0);
+                    executeSql(con, format("INSERT INTO %s(id,version, last_sync) values(?,?,?)", versionTable), schemaId, 0, new Timestamp(System.currentTimeMillis()));
                     dbCurVersion = 0;
                 }
             }
@@ -108,7 +112,7 @@ public class DbUpgrader {
                     //execute env specific upgrade
                     execScript(con, scriptEnvFileFormat.replaceAll("%version", valueOf(v)).replaceAll("%env", environment).replaceAll("%type", "upgrade"), true);
                     //update version in DB
-                    executeSql(con, format("UPDATE %s set version=? where id = ?", versionTable), v, schemaId);
+                    executeSql(con, format("UPDATE %s set version=?, last_sync=? where id = ?", versionTable), v, new Timestamp(System.currentTimeMillis()) ,schemaId);
                 }
             } else if (version < dbCurVersion && allowDowngrade) {
                 LOGGER.info("downgrading from " + dbCurVersion + " to " + version);
@@ -119,7 +123,7 @@ public class DbUpgrader {
                     //execute common downgrade
                     execScript(con, scriptFileFormat.replaceAll("%version", valueOf(v)).replaceAll("%type", "rollback"), true);
                     //update version in DB
-                    executeSql(con, format("UPDATE %s set version=? where id = ?", versionTable), v - 1, schemaId);
+                    executeSql(con, format("UPDATE %s set version=?, last_sync=? where id = ?", versionTable), v - 1, new Timestamp(System.currentTimeMillis()), schemaId);
                 }
             }
         } catch (Exception e) {
@@ -131,6 +135,16 @@ public class DbUpgrader {
             } catch (SQLException e) {
             }
         }
+    }
+
+    private Timestamp getLastSync(Connection con) {
+        try{
+            return collectFirst(executeQuery(con, format("SELECT LAST_SYNC FROM %s WHERE id=?", versionTable), schemaId), null);
+        }catch (SQLException e){
+            LOGGER.info("upgrading version table...");
+            executeSql(con, ADD_LAST_SYNC_ALTER_TABLE);
+        }
+        return new Timestamp(System.currentTimeMillis());
     }
 
     /**
@@ -200,7 +214,7 @@ public class DbUpgrader {
                 Statement statement = conn.createStatement();
                 boolean hasResult = statement.execute(stmt);
                 if(!hasResult){
-                    LOGGER.info(statement.getUpdateCount() + " rows affected");
+                    LOGGER.info(statement.getUpdateCount() + " row(s) affected");
                 }
             } catch (SQLException e) {
                 LOGGER.log(Level.SEVERE, "Failed executing statement:" + stmt, e);
