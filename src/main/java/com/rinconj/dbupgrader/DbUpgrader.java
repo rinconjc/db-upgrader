@@ -34,7 +34,7 @@ import static java.lang.String.valueOf;
 public class DbUpgrader {
     private final static Logger LOGGER = Logger.getLogger(DbUpgrader.class.getName());
     private final static String SQL_SCRIPTS_DIR_SYS_PROPERTY = "dbupgrader.sql.dir";
-    private static final String ADD_LAST_SYNC_ALTER_TABLE = "ALTER TABLE ADD LAST_SYNC TIMESTAMP";
+    private static final String ADD_LAST_SYNC_ALTER_TABLE = "ALTER TABLE %s ADD LAST_SYNC TIMESTAMP";
     private static final String CREATE_VERSION_TABLE_SQL = "CREATE TABLE %s(id varchar(100) NOT NULL, version INTEGER NOT NULL, last_sync TIMESTAMP, " +
             "CONSTRAINT unique_dbinfo_id PRIMARY KEY (id))";
 
@@ -142,7 +142,7 @@ public class DbUpgrader {
             return collectFirst(executeQuery(con, format("SELECT LAST_SYNC FROM %s WHERE id=?", versionTable), schemaId), null);
         }catch (Exception e){
             LOGGER.info("upgrading version table...");
-            executeSql(con, ADD_LAST_SYNC_ALTER_TABLE);
+            executeSql(con, format(ADD_LAST_SYNC_ALTER_TABLE, versionTable));
         }
         return new Timestamp(System.currentTimeMillis());
     }

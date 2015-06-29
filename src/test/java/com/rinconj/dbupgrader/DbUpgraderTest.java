@@ -7,6 +7,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 
 import static com.rinconj.dbupgrader.JdbcUtils.collectFirst;
+import static com.rinconj.dbupgrader.JdbcUtils.executeSql;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -74,4 +75,14 @@ public class DbUpgraderTest {
         upgrader.getCurrentDbVersion();
     }
 
+    @Test
+    public void shouldHandleOldVersionTable() throws Exception {
+        DataSource dataSource = getDataSource("test5");
+        Connection con = dataSource.getConnection();
+        executeSql(con, "create table db_version(id varchar(100) not null, version integer not null, constraint db_version_pk primary key(id))");
+        executeSql(con, "insert into db_version(id, version) values(?,?)", "default", 1);
+        DbUpgrader upgrader = new DbUpgrader(dataSource, "dev");
+        upgrader.syncToVersion(1, false, false);
+        assertEquals(1, upgrader.getCurrentDbVersion());
+    }
 }
