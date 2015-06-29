@@ -140,7 +140,7 @@ public class DbUpgrader {
     private Timestamp getLastSync(Connection con) {
         try{
             return collectFirst(executeQuery(con, format("SELECT LAST_SYNC FROM %s WHERE id=?", versionTable), schemaId), null);
-        }catch (SQLException e){
+        }catch (Exception e){
             LOGGER.info("upgrading version table...");
             executeSql(con, ADD_LAST_SYNC_ALTER_TABLE);
         }
