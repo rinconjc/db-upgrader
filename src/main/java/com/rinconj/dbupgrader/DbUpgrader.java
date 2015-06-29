@@ -143,7 +143,12 @@ public class DbUpgrader {
             return rs.next()? rs.getTimestamp(1) : null;
         }catch (Exception e){
             LOGGER.info("upgrading version table...");
-            executeSql(con, format(ADD_LAST_SYNC_ALTER_TABLE, versionTable));
+            try{
+                executeSql(con, format(ADD_LAST_SYNC_ALTER_TABLE, versionTable));
+            }catch (Exception e1){
+                LOGGER.log(Level.SEVERE, "failed determining last sync time", e);
+                throw new RuntimeException(e);
+            }
         }
         return new Timestamp(System.currentTimeMillis());
     }
