@@ -56,6 +56,9 @@ public class DbUpgrader {
     private File scriptDir;
 
     public DbUpgrader(DataSource dataSource, String environment) {
+        if(environment==null) throw new IllegalArgumentException("invalid environment specified!");
+        if(dataSource==null) throw new IllegalArgumentException("null datasource provided");
+
         this.dataSource = dataSource;
         this.environment = environment;
 
