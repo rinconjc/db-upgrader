@@ -29,7 +29,6 @@ import static java.lang.String.valueOf;
  * </pre>
  * </li>
  * </ul>
- *
  */
 public class DbUpgrader {
     private final static Logger LOGGER = Logger.getLogger(DbUpgrader.class.getName());
@@ -71,7 +70,6 @@ public class DbUpgrader {
                 this.scriptDir = dir;
         }
     }
-
 
     /**
      * Applies upgrade DB scripts up to the specified version. It expects that <b>upgrade_(version)</b> and <b>downgrade_(version)</b>
@@ -158,20 +156,21 @@ public class DbUpgrader {
 
     /**
      * Retrieves the current version number of the database.
+     *
      * @return
      */
-    public int getCurrentDbVersion(){
+    public int getCurrentDbVersion() {
         Connection con = null;
-        try{
+        try {
             con = dataSource.getConnection();
-            if(con.getMetaData().getTables(null, null, versionTable, null).next()){
-                return ((Number)collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
+            if (con.getMetaData().getTables(null, null, versionTable, null).next()) {
+                return ((Number) collectFirst(executeQuery(con, "select version from " + versionTable + " WHERE id=?", schemaId), 0)).intValue();
             }
             return 0;
         } catch (SQLException e) {
             throw new RuntimeException("Failed retrieving current db version", e);
         } finally {
-            if(con != null) try {
+            if (con != null) try {
                 con.close();
             } catch (SQLException e) {
             }
@@ -180,13 +179,14 @@ public class DbUpgrader {
 
     /**
      * Validates the upgrade/rollback scripts for the given version. Useful for unit testing version scripts.
+     *
      * @param version
      * @throws Exception if upgrade or rollback fails
      */
     public void validateVersion(int version, boolean isEmptyDb) throws Exception {
         //test upgrade by running current, then downgrading and finally upgrading it back
         int dbVersion = getCurrentDbVersion();
-        if(dbVersion == version){
+        if (dbVersion == version) {
             syncToVersion(version - 1, true, false);
         } else {
             syncToVersion(version, true, isEmptyDb);
