@@ -127,6 +127,8 @@ public class StatementIterator implements Iterator<String> {
             p = parseNext(reader, sb);
         }while (p!=END_OF_STATEMENT_PARSER && p!=END_OF_SCRIPT);
         String stmt = sb.toString().trim();
+        if(p!=END_OF_SCRIPT && stmt.isEmpty())
+            return getNextStatement();
         return stmt.isEmpty()?null:stmt;
     }
 

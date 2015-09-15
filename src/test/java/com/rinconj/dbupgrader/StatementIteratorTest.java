@@ -71,4 +71,19 @@ public class StatementIteratorTest {
         assertEquals("select 1/0 from test", new StatementIterator(new StringReader("select 1/0 from test/"), '/').next());
     }
 
+    @Test
+    public void shouldHandleEmptyStatements() throws Exception {
+        StatementIterator iterator = new StatementIterator(new StringReader("\ndbms_output.println('blah')/\n/\nselect * from dual/\n"), '/');
+        int count=0;
+        while (iterator.hasNext()){
+            count++;
+            System.out.println(iterator.next());
+        }
+        assertEquals(2, count);
+        StatementIterator it2 = new StatementIterator(new StringReader("/\n/\n/\nselect * from dual/\n--comment\n/\n--blah\n/"), '/');
+        assertNotNull(it2.next());
+        assertFalse(it2.hasNext());
+    }
+
+
 }
