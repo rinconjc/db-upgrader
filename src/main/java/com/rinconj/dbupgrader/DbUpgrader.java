@@ -218,9 +218,10 @@ public class DbUpgrader {
         StatementIterator iterator = new StatementIterator(new InputStreamReader(is), statementSeparator);
         while (iterator.hasNext()) {
             String stmt = iterator.next();
+            Statement statement = null;
             try {
                 LOGGER.info("executing: " + stmt);
-                Statement statement = conn.createStatement();
+                statement = conn.createStatement();
                 boolean hasResult = statement.execute(stmt);
                 if(!hasResult){
                     LOGGER.info(statement.getUpdateCount() + " row(s) affected");
@@ -228,6 +229,8 @@ public class DbUpgrader {
             } catch (SQLException e) {
                 LOGGER.log(Level.SEVERE, "Failed executing statement:" + stmt, e);
                 throw e;
+            } finally {
+                if(statement!=null) statement.close();
             }
         }
     }
